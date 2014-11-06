@@ -1,9 +1,10 @@
 // Load modules
 
 var EventEmitter = require('events').EventEmitter;
+var Code = require('code');   // assertion library
 var Lab = require('lab');
 var lab = exports.lab = Lab.script();
-var GoodHttp = require('..');
+var GoodHttpGelf = require('..');
 var Hapi = require('hapi');
 
 // Declare internals
@@ -42,15 +43,14 @@ internals.makeServer = function (handler) {
 
 var describe = lab.describe;
 var it = lab.it;
-var expect = Lab.expect;
 
 
 
 it('throws an error without using new', function(done) {
 
-    expect(function () {
+    Code.expect(function () {
 
-        var reporter = GoodHttp('www.github.com');
+        var reporter = GoodHttpGelf('www.github.com');
     }).to.throw('GoodHttpGelf must be created with new');
 
     done();
@@ -58,9 +58,9 @@ it('throws an error without using new', function(done) {
 
 it('throws an error if missing endpoint', function (done) {
 
-    expect(function () {
+    Code.expect(function () {
 
-        var reporter = new GoodHttp(null);
+        var reporter = new GoodHttpGelf(null);
     }).to.throw('endpoint must be a string');
 
     done();
@@ -68,10 +68,10 @@ it('throws an error if missing endpoint', function (done) {
 
 it('does not report if the event que is empty', function (done) {
 
-    var reporter = new GoodHttp('http://localhost:31337', { log: '*'}, { threshold: 5 });
+    var reporter = new GoodHttpGelf('http://localhost:31337', { log: '*'}, { threshold: 5 });
 
     var result = reporter._sendMessages();
-    expect(result).to.not.exist;
+    Code.expect(result).to.not.exist;
     done();
 });
 
@@ -87,19 +87,19 @@ describe('_report()', function () {
             var payload = request.payload;
             var events = payload.events.log;
 
-            expect(request.headers['x-api-key']).to.equal('12345');
-            expect(payload.schema).to.equal('good-http');
-            expect(events.length).to.equal(5);
+            Code.expect(request.headers['x-api-key']).to.equal('12345');
+            Code.expect(payload.schema).to.equal('good-http');
+            Code.expect(events.length).to.equal(5);
 
             if (hitCount === 1) {
-                expect(events[4].id).to.equal(4);
-                expect(events[4].event).to.equal('log');
-                reply();
+                Code.expect(events[4].id).to.equal(4);
+                Code.expect(events[4].event).to.equal('log');
+                Code.reply();
             }
 
             if (hitCount === 2) {
-                expect(events[4].id).to.equal(9);
-                expect(events[4].event).to.equal('log');
+                Code.expect(events[4].id).to.equal(9);
+                Code.expect(events[4].event).to.equal('log');
 
                 reply();
                 done();
@@ -108,18 +108,11 @@ describe('_report()', function () {
 
         server.start(function () {
 
-            var reporter = new GoodHttp(server.info.uri, { log: '*' }, {
-                threshold: 5,
-                wreck: {
-                    headers: {
-                        'x-api-key': 12345
-                    }
-                }
-            });
+            var reporter = new GoodHttpGelf(server.info.uri, { log: '*' }, {threshold: 5});
 
             reporter.start(ee, function (err) {
 
-                expect(err).to.not.exist;
+                Code.expect(err).to.not.exist;
 
                 for (var i = 0; i < 10; ++i) {
                    ee.emit('report', 'log', {
@@ -141,10 +134,10 @@ describe('_report()', function () {
             hitCount++;
             var payload = request.payload;
 
-            expect(payload.events).to.exist;
-            expect(payload.events.log).to.exist;
-            expect(payload.events.log.length).to.equal(1);
-            expect(payload.events.log[0].id).to.equal(hitCount - 1);
+            Code.expect(payload.events).to.exist;
+            Code.expect(payload.events.log).to.exist;
+            Code.expect(payload.events.log.length).to.equal(1);
+            Code.expect(payload.events.log[0].id).to.equal(hitCount - 1);
 
             if (hitCount === 10) {
                 done();
@@ -154,13 +147,13 @@ describe('_report()', function () {
 
         server.start(function () {
 
-            var reporter = new GoodHttp(server.info.uri, { log: '*' }, {
-                threshold: 0,
+            var reporter = new GoodHttpGelf(server.info.uri, { log: '*' }, {
+                threshold: 0
             });
 
             reporter.start(ee, function (err) {
 
-                expect(err).to.not.exist;
+                Code.expect(err).to.not.exist;
 
                 for (var i = 0; i < 10; ++i) {
                     ee.emit('report', 'log', {
@@ -183,29 +176,29 @@ describe('_report()', function () {
             var payload = request.payload;
             var events = payload.events;
 
-            expect(request.headers['x-api-key']).to.equal('12345');
-            expect(payload.schema).to.equal('good-http');
+            Code.expect(request.headers['x-api-key']).to.equal('12345');
+            Code.expect(payload.schema).to.equal('good-http');
 
-            expect(events.log).to.exist;
-            expect(events.request).to.exist;
+            Code.expect(events.log).to.exist;
+            Code.expect(events.request).to.exist;
 
-            expect(internals.isSorted(events.log)).to.equal(true);
-            expect(internals.isSorted(events.request)).to.equal(true);
+            Code.expect(internals.isSorted(events.log)).to.equal(true);
+            Code.expect(internals.isSorted(events.request)).to.equal(true);
 
             if (hitCount === 1) {
-                expect(events.log.length).to.equal(3);
-                expect(events.request.length).to.equal(2);
+                Code.expect(events.log.length).to.equal(3);
+                Code.expect(events.request.length).to.equal(2);
             }
             else if (hitCount === 2) {
-                expect(events.log.length).to.equal(2);
-                expect(events.request.length).to.equal(3);
+                Code.expect(events.log.length).to.equal(2);
+                Code.expect(events.request.length).to.equal(3);
                 done();
             }
         });
 
         server.start(function () {
 
-            var reporter = new GoodHttp(server.info.uri, {
+            var reporter = new GoodHttpGelf(server.info.uri, {
                 log: '*',
                 request: '*'
             }, {
@@ -219,7 +212,7 @@ describe('_report()', function () {
 
             reporter.start(ee, function (err) {
 
-                expect(err).to.not.exist;
+                Code.expect(err).to.not.exist;
 
                 for (var i = 0; i < 10; ++i) {
 
@@ -245,25 +238,25 @@ describe('_report()', function () {
             hitCount++;
             var events = request.payload.events;
 
-            expect(events).to.exist;
-            expect(events.log).to.exist;
-            expect(events.log.length).to.equal(5);
-            expect(events.log[0]._data).to.equal('[Circular ~.events.log.0]');
+            Code.expect(events).to.exist;
+            Code.expect(events.log).to.exist;
+            Code.expect(events.log.length).to.equal(5);
+            Code.expect(events.log[0]._data).to.equal('[Circular ~.events.log.0]');
 
 
-            expect(hitCount).to.equal(1);
+            Code.expect(hitCount).to.equal(1);
             done();
         });
 
         server.start(function () {
 
-            var reporter = new GoodHttp(server.info.uri, { log: '*' }, {
+            var reporter = new GoodHttpGelf(server.info.uri, { log: '*' }, {
                 threshold: 5
             });
 
             reporter.start(ee, function (err) {
 
-                expect(err).to.not.exist;
+                Code.expect(err).to.not.exist;
 
                 for (var i = 0; i < 5; ++i) {
 
@@ -294,8 +287,8 @@ describe('stop()', function () {
             var payload = request.payload;
             var events = payload.events;
 
-            expect(events.log).to.exist;
-            expect(events.log.length).to.equal(2);
+            Code.expect(events.log).to.exist;
+            Code.expect(events.log.length).to.equal(2);
 
             reply();
             done();
@@ -303,7 +296,7 @@ describe('stop()', function () {
 
         server.start(function () {
 
-            var reporter = new GoodHttp(server.info.uri, { log: '*' }, {
+            var reporter = new GoodHttpGelf(server.info.uri, { log: '*' }, {
                 threshold: 3,
                 wreck: {
                     headers: {
@@ -314,7 +307,7 @@ describe('stop()', function () {
 
             reporter.start(ee, function (err) {
 
-                expect(err).to.not.exist;
+                Code.expect(err).to.not.exist;
 
                 ee.emit('report', 'log', {
                     event: 'log',
