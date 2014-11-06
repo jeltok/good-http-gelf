@@ -122,6 +122,8 @@ describe('_report()', function () {
                    });
                 }
             });
+
+            done();
         });
     });
 
@@ -162,6 +164,8 @@ describe('_report()', function () {
                         event: 'log'
                     });
                 }
+
+                done();
             });
         });
     });
@@ -225,7 +229,10 @@ describe('_report()', function () {
                         event: eventType
                     });
                 }
+
+                done();
             });
+
         });
     });
 
@@ -270,6 +277,8 @@ describe('_report()', function () {
 
                     ee.emit('report', 'log', data);
                 }
+
+                done();
             });
         });
     });
@@ -322,6 +331,8 @@ describe('stop()', function () {
             });
 
             reporter.stop();
+
+            done();
         });
     });
 });
